@@ -11,9 +11,7 @@ import android.view.View
 
 import com.oop.lab3.shape_editor.PaintMessagesHandler
 
-class PaintView(context: Context, attrs: AttributeSet?):
-    View(context, attrs),
-    PaintUtils {
+class PaintView(context: Context, attrs: AttributeSet?) : View(context, attrs), PaintUtils {
     lateinit var handler: PaintMessagesHandler
 
     override lateinit var drawnShapesCanvas: Canvas
@@ -32,19 +30,17 @@ class PaintView(context: Context, attrs: AttributeSet?):
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        if (!handler.isRubberTraceModeOn) {
-            handler.onPaint()
-            canvas.drawBitmap(drawnShapesBitmap, 0F, 0F, null)
-        } else {
-            canvas.drawBitmap(drawnShapesBitmap, 0F, 0F, null)
+        canvas.drawBitmap(drawnShapesBitmap, 0F, 0F, null)
+        if (handler.isRubberTraceModeOn) {
             canvas.drawBitmap(rubberTraceBitmap, 0F, 0F, null)
+        } else {
+            handler.onPaint()
         }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         super.onTouchEvent(event)
-        val x = event.x
-        val y = event.y
+        val (x, y) = event.x to event.y
         when (event.action) {
             MotionEvent.ACTION_DOWN -> handler.onFingerTouch(x, y)
             MotionEvent.ACTION_MOVE -> handler.onFingerMove(x, y)
@@ -53,11 +49,10 @@ class PaintView(context: Context, attrs: AttributeSet?):
         return true
     }
 
-    override fun repaint() {
-        invalidate()
-    }
+    override fun repaint() = invalidate()
 
     override fun clearCanvas(canvas: Canvas) {
         canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.MULTIPLY)
     }
 }
+

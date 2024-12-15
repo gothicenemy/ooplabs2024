@@ -24,10 +24,9 @@ class ShapeObjectsEditor(context: Context): PaintMessagesHandler {
         PointShape(context, PointShapeEditor()),
         LineShape(context, LineShapeEditor()),
         RectShape(context, RectShapeEditor()),
-        EllipseShape(context, EllipseShapeEditor()),
+        EllipseShape(context, EllipseShapeEditor())
     )
-    var currentShape: Shape? = null
-        private set
+    private var currentShape: Shape? = null
     private val drawnShapes = mutableListOf<Shape>()
     private var activeEditor: ShapeEditor? = null
 
@@ -45,7 +44,7 @@ class ShapeObjectsEditor(context: Context): PaintMessagesHandler {
         activeEditor?.onFingerTouch(x, y)
     }
 
-    override fun onFingerMove(x: Float, y:Float) {
+    override fun onFingerMove(x: Float, y: Float) {
         activeEditor?.let {
             isRubberTraceModeOn = true
             paintUtils.clearCanvas(paintUtils.rubberTraceCanvas)
@@ -65,22 +64,18 @@ class ShapeObjectsEditor(context: Context): PaintMessagesHandler {
     override fun onPaint() {
         paintUtils.clearCanvas(paintUtils.rubberTraceCanvas)
         paintUtils.clearCanvas(paintUtils.drawnShapesCanvas)
-        drawnShapes.forEach {
-            it.showDefault(paintUtils.drawnShapesCanvas)
-        }
+        drawnShapes.forEach { it.showDefault(paintUtils.drawnShapesCanvas) }
     }
 
     fun undo() {
-        if (drawnShapes.size > 0) {
+        if (drawnShapes.isNotEmpty()) {
             drawnShapes.removeLast()
             paintUtils.repaint()
         }
     }
 
     fun clearAll() {
-        if (drawnShapes.size > 0) {
-            drawnShapes.clear()
-            paintUtils.repaint()
-        }
+        drawnShapes.clear()
+        paintUtils.repaint()
     }
 }

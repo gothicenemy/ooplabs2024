@@ -5,22 +5,25 @@ import android.graphics.PointF
 import android.graphics.RectF
 
 class EllipseShapeEditor : ShapeEditor() {
-    private val shapeCenterPoint = PointF()
+
+    private val centerPoint = PointF()
 
     override fun onFingerTouch(x: Float, y: Float) {
-        shapeCenterPoint.set(x, y)
+        centerPoint.set(x, y)
         shape.setStart(x, y)
         shape.setEnd(x, y)
     }
 
     override fun onFingerMove(canvas: Canvas, x: Float, y: Float) {
-        val dx = x -  shapeCenterPoint.x
-        val oppositeX = shapeCenterPoint.x - dx
-        val dy = y - shapeCenterPoint.y
-        val oppositeY = shapeCenterPoint.y - dy
-        val enclosingRect = RectF(oppositeX, oppositeY - dy, x, y).apply { sort() }
-        shape.setStart(enclosingRect.left, enclosingRect.top)
-        shape.setEnd(enclosingRect.right, enclosingRect.bottom)
+        val rect = RectF(
+            centerPoint.x - (x - centerPoint.x),
+            centerPoint.y - (y - centerPoint.y),
+            x,
+            y
+        ).apply { sort() }
+
+        shape.setStart(rect.left, rect.top)
+        shape.setEnd(rect.right, rect.bottom)
         shape.showRubberTrace(canvas)
     }
 }

@@ -7,6 +7,15 @@ import com.oop.lab3.R
 
 import com.oop.lab3.editor.ShapeEditor
 
+package com.oop.lab3.shape
+
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Paint
+import com.oop.lab3.R
+
+import com.oop.lab3.editor.ShapeEditor
+
 abstract class Shape(private val context: Context) {
     abstract val name: String
     val associatedIds = mutableMapOf<String, Int>()
@@ -31,27 +40,20 @@ abstract class Shape(private val context: Context) {
 
     abstract fun getInstance(): Shape
 
-    protected open fun getOutlinePaint(): Paint {
+    protected open fun createPaint(strokeWidth: Float, color: Int): Paint {
         return Paint().apply {
             isAntiAlias = true
             style = Paint.Style.STROKE
-            strokeWidth = 7F
-            color = context.getColor(R.color.black)
+            this.strokeWidth = strokeWidth
+            color = context.getColor(color)
         }
     }
 
-    protected open fun getFillingPaint(): Paint {
-        return Paint().apply {
-            isAntiAlias = true
-            style = Paint.Style.FILL
-        }
-    }
+    protected open fun getOutlinePaint(): Paint = createPaint(7F, R.color.black)
 
-    protected open fun getRubberTracePaint(): Paint {
-        val paint = getOutlinePaint()
-        paint.color = context.getColor(R.color.dark_blue)
-        return paint
-    }
+    protected open fun getFillingPaint(): Paint = createPaint(0F, 0) // Default no color
+
+    protected open fun getRubberTracePaint(): Paint = createPaint(7F, R.color.dark_blue)
 
     abstract fun show(canvas: Canvas, outlinePaint: Paint, fillingPaint: Paint?)
 
@@ -61,3 +63,5 @@ abstract class Shape(private val context: Context) {
         show(canvas, getRubberTracePaint(), null)
     }
 }
+
+

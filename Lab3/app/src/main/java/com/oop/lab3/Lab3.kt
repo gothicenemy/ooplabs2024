@@ -20,17 +20,18 @@ class Lab3 : AppCompatActivity() {
 
         shapeObjEditor = ShapeObjectsEditor(this)
 
-        mainToolbar = findViewById(R.id.main_toolbar)
-        mainToolbar.onCreate(shapeObjEditor)
-        mainToolbar.setObjListeners(::onObjSelect, ::onObjCancel)
+        setupToolbar(mainToolbar, shapeObjEditor)
+        setupToolbar(objectsToolbar, shapeObjEditor)
 
-        objectsToolbar = findViewById(R.id.objects_toolbar)
-        objectsToolbar.onCreate(shapeObjEditor)
-        objectsToolbar.setObjListeners(::onObjSelect, ::onObjCancel)
+        val paintView = findViewById<PaintView>(R.id.paint_view).apply {
+            handler = shapeObjEditor
+            shapeObjEditor.paintUtils = this
+        }
+    }
 
-        val paintView = findViewById<PaintView>(R.id.paint_view)
-        paintView.handler = shapeObjEditor
-        shapeObjEditor.paintUtils = paintView
+    private fun setupToolbar(toolbar: ObjectsToolbar, editor: ShapeObjectsEditor) {
+        toolbar.onCreate(editor)
+        toolbar.setObjListeners(::onObjSelect, ::onObjCancel)
     }
 
     private fun onObjSelect(shape: Shape) {
@@ -45,3 +46,4 @@ class Lab3 : AppCompatActivity() {
         shapeObjEditor.closeEditor()
     }
 }
+

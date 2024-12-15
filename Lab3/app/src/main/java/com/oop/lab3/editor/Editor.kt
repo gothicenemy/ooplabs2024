@@ -2,7 +2,7 @@ package com.oop.lab3.editor
 
 import android.graphics.Canvas
 
-import com.oop.lab3.shape.Shape
+import com.oop.lab2.shape.Shape
 
 abstract class Editor {
     abstract fun onFingerTouch(x: Float, y: Float)
