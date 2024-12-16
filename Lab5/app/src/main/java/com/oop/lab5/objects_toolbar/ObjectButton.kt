@@ -6,31 +6,31 @@ import android.graphics.PorterDuffColorFilter
 import android.util.AttributeSet
 import android.view.MotionEvent
 import com.oop.lab5.R
-
 import com.oop.lab5.shape.Shape
 import com.oop.lab5.tooltip.Tooltip
 
-class ObjectButton(context: Context, attrs: AttributeSet?):
+class ObjectButton(context: Context, attrs: AttributeSet?) :
     androidx.appcompat.widget.AppCompatImageButton(context, attrs) {
     private lateinit var shape: Shape
-
     private var isSelected = false
     private lateinit var onSelectListener: (Shape) -> Unit
     private lateinit var onCancelListener: () -> Unit
 
-    private val selectTooltip = Tooltip(context)
-    private val cancelTooltip = Tooltip(context)
+    private val selectTooltip by lazy { Tooltip(context).apply { create("") } }
+    private val cancelTooltip by lazy { Tooltip(context).apply { create("") } }
 
-    private val timeOfLongPress = 1000
+    private val longPressThreshold = 1000L
     private var pressStartTime: Long = 0
-    private var pressEndTime: Long = 0
 
-    fun onCreate(shape: Shape) {
+    fun setup(shape: Shape,
+              onSelectListener: (Shape) -> Unit,
+              onCancelListener: () -> Unit) {
         this.shape = shape
-        val selectTooltipText = "Вибрати об\'єкт\n\"${shape.name}\""
-        selectTooltip.create(selectTooltipText)
-        val cancelTooltipText = "Вимкнути режим\nредагування"
-        cancelTooltip.create(cancelTooltipText)
+        this.onSelectListener = onSelectListener
+        this.onCancelListener = onCancelListener
+
+        selectTooltip.updateText("Select: ${shape.name}")
+        cancelTooltip.updateText("Cancel editing")
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -40,15 +40,9 @@ class ObjectButton(context: Context, attrs: AttributeSet?):
                 pressStartTime = System.currentTimeMillis()
             }
             MotionEvent.ACTION_UP -> {
-                pressEndTime = System.currentTimeMillis()
-                val pressDuration = pressEndTime - pressStartTime
-                if (pressDuration < timeOfLongPress) {
-                    performClick()
-                } else {
-                    performLongClick()
-                }
-                pressStartTime = 0
-                pressEndTime = 0
+                val pressDuration = System.currentTimeMillis() - pressStartTime
+                if (pressDuration < longPressThreshold) performClick() else performLongClick()
+                resetPressTime()
             }
         }
         return true
@@ -56,65 +50,43 @@ class ObjectButton(context: Context, attrs: AttributeSet?):
 
     override fun performClick(): Boolean {
         super.performClick()
-        if (!isSelected) {
-            onSelectListener(shape.getInstance())
-        } else {
-            onCancelListener()
-        }
+        if (isSelected) onCancelListener() else onSelectListener(shape)
         return true
     }
 
     override fun performLongClick(): Boolean {
         super.performLongClick()
-        if (!isSelected) {
-            markNotPressed()
-            selectTooltip.display()
-        } else {
-            markSelected()
-            cancelTooltip.display()
-        }
+        if (isSelected) cancelTooltip.display() else selectTooltip.display()
         return true
     }
 
+    private fun resetPressTime() {
+        pressStartTime = 0
+    }
+
     private fun markPressed() {
-        val backgroundColorId = R.color.pressed_btn_background_color
-        backgroundTintList = context.getColorStateList(backgroundColorId)
+        setBackgroundTint(R.color.pressed_btn_background_color)
     }
 
-    private fun markNotPressed() {
-        val backgroundColorId = R.color.transparent
-        backgroundTintList = context.getColorStateList(backgroundColorId)
+    private fun setBackgroundTint(colorRes: Int) {
+        backgroundTintList = context.getColorStateList(colorRes)
     }
 
-    private fun markSelected() {
-        val backgroundColorId = R.color.selected_btn_background_color
-        backgroundTintList = context.getColorStateList(backgroundColorId)
-        val iconColor = context.getColor(R.color.selected_btn_icon_color)
-        colorFilter = PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN)
-    }
-
-    private fun markNotSelected() {
-        val backgroundColorId = R.color.transparent
-        backgroundTintList = context.getColorStateList(backgroundColorId)
-        val iconColor = context.getColor(R.color.on_objects_toolbar_color)
-        colorFilter = PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN)
-    }
-
-    fun setObjListeners(
-        onSelectListener: (Shape) -> Unit,
-        onCancelListener: () -> Unit
-    ) {
-        this.onSelectListener = onSelectListener
-        this.onCancelListener = onCancelListener
+    private fun setIconTint(colorRes: Int) {
+        colorFilter = PorterDuffColorFilter(
+            context.getColor(colorRes), PorterDuff.Mode.SRC_IN
+        )
     }
 
     fun onSelectObj() {
         isSelected = true
-        markSelected()
+        setBackgroundTint(R.color.selected_btn_background_color)
+        setIconTint(R.color.selected_btn_icon_color)
     }
 
     fun onCancelObj() {
         isSelected = false
-        markNotSelected()
+        setBackgroundTint(R.color.transparent)
+        setIconTint(R.color.on_objects_toolbar_color)
     }
 }

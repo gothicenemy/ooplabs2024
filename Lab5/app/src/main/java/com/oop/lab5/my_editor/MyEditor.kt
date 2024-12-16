@@ -4,16 +4,10 @@ import android.content.Context
 import java.lang.StringBuilder
 
 import com.oop.lab5.paint_view.PaintUtils
-import com.oop.lab5.shape.Shape
-import com.oop.lab5.shape.PointShape
-import com.oop.lab5.shape.LineShape
-import com.oop.lab5.shape.RectShape
-import com.oop.lab5.shape.EllipseShape
-import com.oop.lab5.shape.SegmentShape
-import com.oop.lab5.shape.CuboidShape
+import com.oop.lab5.shape.*
 import com.oop.lab5.tooltip.Tooltip
 
-class MyEditor private constructor(): PaintMessagesHandler {
+class MyEditor private constructor() : PaintMessagesHandler {
     companion object {
         @Volatile
         private lateinit var instance: MyEditor
@@ -101,20 +95,8 @@ class MyEditor private constructor(): PaintMessagesHandler {
     }
 
     fun serializeShape(shape: Shape): String {
-        val str = StringBuilder()
         val coords = shape.getCoords()
-        val fields = arrayOf(
-            shape.name,
-            coords.left.toInt(),
-            coords.top.toInt(),
-            coords.right.toInt(),
-            coords.bottom.toInt()
-        )
-        (0..<(fields.size - 1)).forEach {
-            str.append("${fields[it]}\t")
-        }
-        str.append("${fields.last()}")
-        return str.toString()
+        return "${shape.name}\t${coords.left.toInt()}\t${coords.top.toInt()}\t${coords.right.toInt()}\t${coords.bottom.toInt()}"
     }
 
     fun deserializeShape(serializedShape: String): Shape {
@@ -126,24 +108,17 @@ class MyEditor private constructor(): PaintMessagesHandler {
             val endX = data[3].toFloat()
             val endY = data[4].toFloat()
         }
-        val shape = shapes.find { fields.name == it.name }!!.getInstance()
-        shape.setStart(fields.startX, fields.startY)
-        shape.setEnd(fields.endX, fields.endY)
-        return shape
+        return shapes.find { it.name == fields.name }?.getInstance()?.apply {
+            setStart(fields.startX, fields.startY)
+            setEnd(fields.endX, fields.endY)
+        } ?: throw IllegalArgumentException("Unknown shape name: ${fields.name}")
     }
 
-    fun serializeDrawing(): String {
-        val str = StringBuilder()
-        drawnShapes.forEach {
-            str.append("${serializeShape(it)}\n")
-        }
-        return str.toString()
-    }
+    fun serializeDrawing(): String = drawnShapes.joinToString("\n") { serializeShape(it) }
 
     fun deserializeDrawing(serializedDrawing: String) {
         if (!isDrawingEmpty()) clearAll()
-        val serializedShapes = serializedDrawing.dropLast(1).split("\n")
-        serializedShapes.forEach {
+        serializedDrawing.lines().forEach {
             addShape(deserializeShape(it))
         }
         paintUtils.repaint()
@@ -160,17 +135,15 @@ class MyEditor private constructor(): PaintMessagesHandler {
     }
 
     fun cancelShapes(indices: List<Int>) {
-        for (index in indices) {
-            selectedShapesIndices.remove(index)
-        }
+        selectedShapesIndices.removeAll(indices)
         paintUtils.repaint()
     }
 
     fun deleteShapes(indices: List<Int>) {
         if (!isDrawingEmpty()) {
-            for (index in indices.sorted().sortedDescending()) {
-                selectedShapesIndices.remove(index)
-                drawnShapes.removeAt(index)
+            indices.sortedDescending().forEach {
+                drawnShapes.removeAt(it)
+                selectedShapesIndices.remove(it)
             }
             paintUtils.repaint()
         } else {
@@ -178,18 +151,19 @@ class MyEditor private constructor(): PaintMessagesHandler {
         }
     }
 
-    fun isDrawingEmpty(): Boolean {
-        return drawnShapes.isEmpty()
-    }
+    fun isDrawingEmpty(): Boolean = drawnShapes.isEmpty()
 
     fun undo() {
-        deleteShapes(listOf(drawnShapes.size - 1))
-        onUndoListener()
+        if (drawnShapes.isNotEmpty()) {
+            drawnShapes.removeLast()
+            onUndoListener()
+        }
     }
 
     fun clearAll() {
-        deleteShapes((0..<drawnShapes.size).toList())
+        drawnShapes.clear()
         onClearAllListener()
+        paintUtils.repaint()
     }
 
     fun setOnNewShapeListener(listener: ((Shape) -> Unit)?) {

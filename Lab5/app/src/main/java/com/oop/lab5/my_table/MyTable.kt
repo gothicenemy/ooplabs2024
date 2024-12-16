@@ -14,22 +14,19 @@ import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import com.oop.lab5.R
 
-class MyTable: Fragment(R.layout.table) {
-    var isDisplayed = false
-
-    private lateinit var scrollView: ScrollView
-    private lateinit var tableLayout: TableLayout
-    
-    private lateinit var bottomView: LinearLayout
-    private lateinit var defaultBottomView: LinearLayout
-    private lateinit var selectBottomView: LinearLayout
-    
+class MyTable : Fragment(R.layout.table) {
+    private var isDisplayed = false
     private val selectedRowsIndices = mutableListOf<Int>()
-
     private var onHideTableListener: (() -> Unit)? = null
     private var onSelectRowListener: ((Int) -> Unit)? = null
     private var onCancelRowsListener: ((List<Int>) -> Unit)? = null
     private var onDeleteRowsListener: ((List<Int>) -> Unit)? = null
+
+    private lateinit var scrollView: ScrollView
+    private lateinit var tableLayout: TableLayout
+    private lateinit var bottomView: LinearLayout
+    private lateinit var defaultBottomView: LinearLayout
+    private lateinit var selectBottomView: LinearLayout
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -38,165 +35,127 @@ class MyTable: Fragment(R.layout.table) {
         tableLayout = view.findViewById(R.id.table_table_layout)
         bottomView = view.findViewById(R.id.files_dialog_bottom_view)
 
-        defaultBottomView = LinearLayout(context)
-        layoutInflater.inflate(
-            R.layout.table_default_bottom_view, defaultBottomView, true
-        )
-        val buttonHide = defaultBottomView.findViewById<Button>(R.id.files_dialog_btn_hide)
-        buttonHide.setOnClickListener {
-            onHideTableListener?.invoke()
+        defaultBottomView = inflateBottomView(R.layout.table_default_bottom_view) {
+            findViewById<Button>(R.id.files_dialog_btn_hide).setOnClickListener {
+                onHideTableListener?.invoke()
+            }
         }
 
-        selectBottomView = LinearLayout(context)
-        layoutInflater.inflate(
-            R.layout.table_select_bottom_view, selectBottomView, true
-        )
-        val buttonCancel = selectBottomView.findViewById<Button>(R.id.files_dialog_btn_open)
-        buttonCancel.setOnClickListener {
-            cancelRows(selectedRowsIndices.toList())
-        }
-        val buttonDelete = selectBottomView.findViewById<Button>(R.id.files_dialog_btn_delete)
-        buttonDelete.setOnClickListener {
-            val indices = selectedRowsIndices.toList()
-            deleteRows(indices)
-            onDeleteRowsListener?.invoke(indices)
+        selectBottomView = inflateBottomView(R.layout.table_select_bottom_view) {
+            findViewById<Button>(R.id.files_dialog_btn_open).setOnClickListener {
+                cancelRows(selectedRowsIndices.toList())
+            }
+            findViewById<Button>(R.id.files_dialog_btn_delete).setOnClickListener {
+                deleteRows(selectedRowsIndices.toList())
+                onDeleteRowsListener?.invoke(selectedRowsIndices.toList())
+            }
         }
 
         bottomView.addView(defaultBottomView)
     }
 
+    private fun inflateBottomView(layoutId: Int, init: View.() -> Unit): LinearLayout {
+        return LinearLayout(context).apply {
+            layoutInflater.inflate(layoutId, this, true)
+            init()
+        }
+    }
+
     fun addRow(serializedShape: String) {
         val data = serializedShape.dropLast(1).split("\t")
-        val fields = object {
-            val name = data[0]
-            val x1 = data[1]
-            val y1 = data[2]
-            val x2 = data[3]
-            val y2 = data[4]
-        }
-        val row = TableRow(context)
-        layoutInflater.inflate(R.layout.table_row, row, true)
-        row.findViewById<TextView>(R.id.table_shape_name).text = fields.name
-        row.findViewById<TextView>(R.id.table_x1).text = fields.x1
-        row.findViewById<TextView>(R.id.table_y1).text = fields.y1
-        row.findViewById<TextView>(R.id.table_x2).text = fields.x2
-        row.findViewById<TextView>(R.id.table_y2).text = fields.y2
-
-        row.setOnClickListener {
-            val rowIndex = tableLayout.indexOfChild(it)
-            if (!selectedRowsIndices.contains(rowIndex)) {
-                selectRow(rowIndex)
-            } else {
-                cancelRows(listOf(rowIndex))
-            }
+        val row = TableRow(context).apply {
+            layoutInflater.inflate(R.layout.table_row, this, true)
+            findViewById<TextView>(R.id.table_shape_name).text = data[0]
+            findViewById<TextView>(R.id.table_x1).text = data[1]
+            findViewById<TextView>(R.id.table_y1).text = data[2]
+            findViewById<TextView>(R.id.table_x2).text = data[3]
+            findViewById<TextView>(R.id.table_y2).text = data[4]
+            setOnClickListener { toggleRowSelection(tableLayout.indexOfChild(this)) }
         }
         tableLayout.addView(row)
-        val firstChild = tableLayout.children.first()
-        if (firstChild is TextView) {
-            tableLayout.removeView(firstChild)
-        }
-        setDefaultRowBgColor(tableLayout.indexOfChild(row))
+        tableLayout.children.firstOrNull()?.let { if (it is TextView) tableLayout.removeView(it) }
+        updateRowBgColor(row, tableLayout.indexOfChild(row))
         scrollView.scrollToDescendant(row)
     }
 
-    private fun selectRow(index: Int) {
-        if (selectedRowsIndices.isEmpty()) {
-            bottomView.removeView(defaultBottomView)
-            bottomView.addView(selectBottomView)
+    private fun toggleRowSelection(index: Int) {
+        if (selectedRowsIndices.contains(index)) {
+            cancelRows(listOf(index))
+        } else {
+            selectRow(index)
         }
+    }
+
+    private fun selectRow(index: Int) {
+        if (selectedRowsIndices.isEmpty()) switchBottomView(defaultBottomView, selectBottomView)
         selectedRowsIndices.add(index)
-        setSelectedRowBgColor(index)
+        updateRowBgColor(tableLayout.getChildAt(index), index, isSelected = true)
         onSelectRowListener?.invoke(index)
     }
 
     private fun cancelRows(indices: List<Int>) {
-        for (index in indices) {
+        indices.forEach { index ->
             selectedRowsIndices.remove(index)
-            setDefaultRowBgColor(index)
+            updateRowBgColor(tableLayout.getChildAt(index), index)
         }
-        if (selectedRowsIndices.isEmpty()) {
-            bottomView.removeView(selectBottomView)
-            bottomView.addView(defaultBottomView)
-        }
+        if (selectedRowsIndices.isEmpty()) switchBottomView(selectBottomView, defaultBottomView)
         onCancelRowsListener?.invoke(indices)
     }
 
     fun deleteRows(indices: List<Int>) {
-        for (index in indices.sorted().sortedDescending()) {
-            selectedRowsIndices.remove(index)
-            val row = tableLayout.getChildAt(index)
-            tableLayout.removeView(row)
+        indices.sortedDescending().forEach {
+            selectedRowsIndices.remove(it)
+            tableLayout.removeViewAt(it)
         }
-        (indices.min()..<tableLayout.childCount).forEach {
-            setDefaultRowBgColor(it)
-        }
+        refreshTableAfterDeletion()
+    }
+
+    private fun refreshTableAfterDeletion() {
         if (tableLayout.childCount == 0) {
-            if (bottomView.children.first() == selectBottomView) {
-                bottomView.removeView(selectBottomView)
-                bottomView.addView(defaultBottomView)
-            }
-            val textView = TextView(context).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    resources.getDimension(R.dimen.table_content_height).toInt()
-                )
-                text = "Полотно порожнє"
-                textSize = 20F
-                setTypeface(null, Typeface.ITALIC)
-                gravity = Gravity.CENTER
-            }
-            tableLayout.addView(textView)
-        } else if (selectedRowsIndices.isEmpty()) {
-            if (bottomView.children.first() == selectBottomView) {
-                bottomView.removeView(selectBottomView)
-                bottomView.addView(defaultBottomView)
-            }
+            addEmptyTableMessage()
+        } else {
+            tableLayout.children.forEachIndexed { index, row -> updateRowBgColor(row, index) }
+        }
+        if (selectedRowsIndices.isEmpty()) switchBottomView(selectBottomView, defaultBottomView)
+    }
+
+    private fun addEmptyTableMessage() {
+        tableLayout.addView(TextView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                resources.getDimension(R.dimen.table_content_height).toInt()
+            )
+            text = "Полотно порожнє"
+            textSize = 20F
+            setTypeface(null, Typeface.ITALIC)
+            gravity = Gravity.CENTER
+        })
+    }
+
+    private fun updateRowBgColor(row: View, index: Int, isSelected: Boolean = false) {
+        row.setBackgroundColor(
+            requireActivity().getColor(
+                if (isSelected) {
+                    if (index % 2 == 0) R.color.table_selected_row_bg_color_1 else R.color.table_selected_row_bg_color_2
+                } else {
+                    if (index % 2 == 0) R.color.table_default_row_bg_color_1 else R.color.table_default_row_bg_color_2
+                }
+            )
+        )
+    }
+
+    private fun switchBottomView(from: View, to: View) {
+        bottomView.apply {
+            removeView(from)
+            addView(to)
         }
     }
 
-    private fun setDefaultRowBgColor(index: Int) {
-        val row = tableLayout.getChildAt(index)
-        row.setBackgroundColor(
-            if (index % 2 == 0) {
-                requireActivity().getColor(R.color.table_default_row_bg_color_1)
-            } else {
-                requireActivity().getColor(R.color.table_default_row_bg_color_2)
-            }
-        )
-    }
+    fun setOnHideTableListener(listener: () -> Unit) { onHideTableListener = listener }
 
-    private fun setSelectedRowBgColor(index: Int) {
-        val row = tableLayout.getChildAt(index)
-        row.setBackgroundColor(
-            if (index % 2 == 0) {
-                requireActivity().getColor(R.color.table_selected_row_bg_color_1)
-            } else {
-                requireActivity().getColor(R.color.table_selected_row_bg_color_2)
-            }
-        )
-    }
+    fun setOnSelectRowListener(listener: (Int) -> Unit) { onSelectRowListener = listener }
 
-    fun onUndo() {
-        deleteRows(listOf(tableLayout.childCount - 1))
-    }
+    fun setOnCancelRowsListener(listener: (List<Int>) -> Unit) { onCancelRowsListener = listener }
 
-    fun onClearAll() {
-        deleteRows((0..<tableLayout.childCount).toList())
-    }
-
-    fun setOnHideTableListener(listener: () -> Unit) {
-        onHideTableListener = listener
-    }
-
-    fun setOnSelectRowListener(listener: (Int) -> Unit) {
-        onSelectRowListener = listener
-    }
-
-    fun setOnCancelRowsListener(listener: (List<Int>) -> Unit) {
-        onCancelRowsListener = listener
-    }
-
-    fun setOnDeleteRowsListener(listener: (List<Int>) -> Unit) {
-        onDeleteRowsListener = listener
-    }
+    fun setOnDeleteRowsListener(listener: (List<Int>) -> Unit) { onDeleteRowsListener = listener }
 }

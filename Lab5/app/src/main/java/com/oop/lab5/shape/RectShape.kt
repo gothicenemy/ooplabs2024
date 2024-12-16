@@ -6,7 +6,7 @@ import android.graphics.Paint
 import android.graphics.RectF
 import com.oop.lab5.R
 
-class RectShape(private val context: Context): Shape(context) {
+class RectShape(private val context: Context) : Shape(context) {
     override val name = context.getString(R.string.rectangle)
 
     override fun isValid(): Boolean {

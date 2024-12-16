@@ -7,5 +7,6 @@ interface PaintUtils {
     val rubberTraceCanvas: Canvas
 
     fun repaint()
+
     fun clearCanvas(canvas: Canvas)
 }

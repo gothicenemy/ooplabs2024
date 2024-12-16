@@ -22,7 +22,6 @@ class Lab5 : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
 
-        // Стартові налаштування MyTable
         table = MyTable()
         table.setOnHideTableListener { hideTable() }
         table.setOnSelectRowListener { rowIndex -> editor.selectShape(rowIndex) }
@@ -34,7 +33,6 @@ class Lab5 : AppCompatActivity() {
             .hide(table)
             .commit()
 
-        // Стартові налаштування MyEditor
         editor = MyEditor.getInstance()
         editor.onCreate(this)
         val paintView = findViewById<PaintView>(R.id.paint_view)
@@ -46,7 +44,6 @@ class Lab5 : AppCompatActivity() {
         editor.setOnUndoListener { table.onUndo() }
         editor.setOnClearAllListener { table.onClearAll() }
 
-        // Стартові налаштування MainToolbar
         mainToolbar = findViewById(R.id.main_toolbar)
         mainToolbar.onCreate(editor)
         mainToolbar.setFileListeners(
@@ -60,12 +57,10 @@ class Lab5 : AppCompatActivity() {
         }
         mainToolbar.setObjListeners(::selectObj, ::cancelObj)
 
-        // Стартові налаштування ObjectsToolbar
         objectsToolbar = findViewById(R.id.objects_toolbar)
         objectsToolbar.onCreate(editor)
         objectsToolbar.setObjListeners(::selectObj, ::cancelObj)
 
-        // Стартові налаштування FileManager
         fileManager = FileManager(this)
         fileManager.onCreate { fileName ->
             mainToolbar.setFileName(fileName)
@@ -114,13 +109,13 @@ class Lab5 : AppCompatActivity() {
 
     private fun selectObj(shape: Shape) {
         mainToolbar.onSelectObj(shape)
-        objectsToolbar.onSelectObj(shape)
+        objectsToolbar.onObjSelect(shape)
         editor.start(shape)
     }
 
     private fun cancelObj() {
         mainToolbar.onCancelObj()
-        objectsToolbar.onCancelObj()
+        objectsToolbar.onObjCancel()
         editor.close()
     }
 }

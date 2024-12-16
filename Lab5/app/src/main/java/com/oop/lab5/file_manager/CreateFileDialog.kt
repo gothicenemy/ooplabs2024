@@ -9,20 +9,13 @@ import android.widget.EditText
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import com.oop.lab5.R
-
 import com.oop.lab5.tooltip.Tooltip
 
-class CreateFileDialog: DialogFragment(R.layout.create_file_dialog) {
+class CreateFileDialog : DialogFragment(R.layout.create_file_dialog) {
     private lateinit var editText: EditText
     private var hint = ""
-
     private lateinit var onCancelListener: () -> Unit
     private lateinit var onConfirmListener: (String) -> Pair<Boolean, String>
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setStyle(STYLE_NORMAL, R.style.Dialog)
-    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return super.onCreateDialog(savedInstanceState).apply {
@@ -33,26 +26,29 @@ class CreateFileDialog: DialogFragment(R.layout.create_file_dialog) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        editText = view.findViewById(R.id.enter_file_name)
-        editText.hint = hint
-        val buttonCancel = view.findViewById<Button>(R.id.files_dialog_btn_open)
-        buttonCancel.setOnClickListener {
-            editText.text.clear()
-            onCancelListener()
-            dismiss()
+        editText = view.findViewById(R.id.enter_file_name).apply {
+            hint = this@CreateFileDialog.hint
         }
-        val buttonOkay = view.findViewById<Button>(R.id.files_dialog_btn_delete)
-        buttonOkay.setOnClickListener {
-            val text = editText.text.toString()
-            editText.text.clear()
-            val (isNameValid, message) = onConfirmListener(text)
-            if (isNameValid) {
+
+        view.findViewById<Button>(R.id.files_dialog_btn_open).apply {
+            setOnClickListener {
+                editText.text.clear()
+                onCancelListener()
                 dismiss()
-                Tooltip(requireActivity()).create(message).display()
-            } else {
-                editText.setHintTextColor(Color.RED)
-                editText.hint = message
+            }
+        }
+
+        view.findViewById<Button>(R.id.files_dialog_btn_delete).apply {
+            setOnClickListener {
+                val text = editText.text.toString().also { editText.text.clear() }
+                val (isValid, message) = onConfirmListener(text)
+                if (isValid) {
+                    dismiss()
+                    Tooltip(requireActivity()).create(message).display()
+                } else {
+                    editText.setHintTextColor(Color.RED)
+                    editText.hint = message
+                }
             }
         }
     }
@@ -62,11 +58,8 @@ class CreateFileDialog: DialogFragment(R.layout.create_file_dialog) {
         show(manager, "create_file_dialog")
     }
 
-    fun setFileCreationListeners(
-        cancelListener: () -> Unit,
-        confirmListener: (String) -> Pair<Boolean, String>
-    ) {
-        onConfirmListener = confirmListener
+    fun setFileCreationListeners(cancelListener: () -> Unit, confirmListener: (String) -> Pair<Boolean, String>) {
         onCancelListener = cancelListener
+        onConfirmListener = confirmListener
     }
 }

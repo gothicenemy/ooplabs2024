@@ -5,7 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import com.oop.lab5.R
 
-class LineShape(private val context: Context): Shape(context) {
+class LineShape(private val context: Context) : Shape(context) {
     override val name = context.getString(R.string.line)
 
     override fun isValid(): Boolean {

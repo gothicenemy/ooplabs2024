@@ -11,13 +11,13 @@ import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
 import com.oop.lab5.R
-
 import com.oop.lab5.my_editor.MyEditor
 import com.oop.lab5.shape.Shape
 import com.oop.lab5.tooltip.Tooltip
 
 class MainToolbar(context: Context, attrs: AttributeSet?):
     Toolbar(context, attrs) {
+
     private lateinit var editor: MyEditor
 
     private lateinit var optionsMenu: PopupMenu
@@ -144,20 +144,6 @@ class MainToolbar(context: Context, attrs: AttributeSet?):
         return popupMenu
     }
 
-    fun setTableListener(listener: () -> Unit) {
-        onShowHideTableListener = listener
-    }
-
-    fun onShowTable () {
-        val iconColor = context.getColor(R.color.on_main_toolbar_selected_btn_icon_color)
-        btnTable.colorFilter = PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN)
-    }
-
-    fun onHideTable() {
-        val iconColor = context.getColor(R.color.on_main_toolbar_color)
-        btnTable.colorFilter = PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN)
-    }
-
     fun setFileListeners(
         filesListener: () -> Unit,
         saveListener: () -> Unit,
@@ -203,5 +189,19 @@ class MainToolbar(context: Context, attrs: AttributeSet?):
             val item = objSubmenu.menu.findItem(id!!)
             item.isChecked = false
         }
+    }
+
+    fun setTableListener(listener: () -> Unit) {
+        onShowHideTableListener = listener
+    }
+
+    fun onShowTable() {
+        val iconColor = context.getColor(R.color.on_main_toolbar_selected_btn_icon_color)
+        btnTable.colorFilter = PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN)
+    }
+
+    fun onHideTable() {
+        val iconColor = context.getColor(R.color.on_main_toolbar_color)
+        btnTable.colorFilter = PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN)
     }
 }

@@ -6,7 +6,7 @@ import android.graphics.Paint
 import android.graphics.RectF
 import com.oop.lab5.R
 
-class EllipseShape(private val context: Context): Shape(context) {
+class EllipseShape(private val context: Context) : Shape(context) {
     override val name = context.getString(R.string.ellipse)
 
     override fun isValid(): Boolean {
@@ -34,7 +34,7 @@ class EllipseShape(private val context: Context): Shape(context) {
     }
 
     override fun show(canvas: Canvas, outlinePaint: Paint, fillingPaint: Paint?) {
-        val dx = endX -  startX
+        val dx = endX - startX
         val dy = endY - startY
         val rect = RectF(startX - dx, startY - dy, endX, endY).apply { sort() }
         fillingPaint?.let {

@@ -11,7 +11,7 @@ import android.view.View
 
 import com.oop.lab5.my_editor.PaintMessagesHandler
 
-class PaintView(context: Context, attrs: AttributeSet?):
+class PaintView(context: Context, attrs: AttributeSet?) :
     View(context, attrs),
     PaintUtils {
     lateinit var handler: PaintMessagesHandler
