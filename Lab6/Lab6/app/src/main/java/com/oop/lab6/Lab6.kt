@@ -17,18 +17,12 @@ class Lab6 : AppCompatActivity() {
 
     private val object2SignalHandler = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            intent?.let {
-                if (it.action == "OBJECT2_SEND_SIGNAL") {
-                    val signal = it.getStringExtra("SIGNAL")
-                    if (signal == "TASK_END_SUCCESS") {
-                        val object3LaunchDelay = 200L
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            launchAppWithSignal(object3PackageName, "START")
-                        }, object3LaunchDelay)
-                    } else {
-                        showToast("Сталась помилка виконання $object2PackageName")
-                    }
-                }
+            intent?.takeIf { it.action == "OBJECT2_SEND_SIGNAL" }?.getStringExtra("SIGNAL")?.let { signal ->
+                if (signal == "TASK_END_SUCCESS") {
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        launchAppWithSignal(object3PackageName, "START")
+                    }, 200L)
+                } else showToast("Сталась помилка виконання $object2PackageName")
             }
         }
     }
@@ -36,16 +30,13 @@ class Lab6 : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
-        val intentFilter = IntentFilter("OBJECT2_SEND_SIGNAL")
-        registerReceiver(object2SignalHandler, intentFilter, RECEIVER_EXPORTED)
+        registerReceiver(object2SignalHandler, IntentFilter("OBJECT2_SEND_SIGNAL"), RECEIVER_EXPORTED)
 
-        val btnCompleteTask: Button = findViewById(R.id.complete_task)
-        btnCompleteTask.setOnClickListener {
-            val dialog = Dialog()
-            dialog.setOnConfirmListener { data ->
-                launchAppWithData(object2PackageName, data)
+        findViewById<Button>(R.id.complete_task).setOnClickListener {
+            Dialog().apply {
+                setOnConfirmListener { data -> launchAppWithData(object2PackageName, data) }
+                show(supportFragmentManager, "DIALOG")
             }
-            dialog.show(supportFragmentManager, "DIALOG")
         }
     }
 
@@ -69,10 +60,6 @@ class Lab6 : AppCompatActivity() {
     }
 
     private fun showToast(text: String) {
-        with(Toast(this)) {
-            setText(text)
-            duration = Toast.LENGTH_SHORT
-            show()
-        }
+        Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
     }
 }

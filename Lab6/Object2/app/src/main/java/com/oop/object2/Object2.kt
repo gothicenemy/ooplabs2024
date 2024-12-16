@@ -26,36 +26,25 @@ class Object2 : AppCompatActivity() {
     }
 
     private fun handleIntent() {
-        val data = intent.getIntArrayExtra("DATA")
-        data?.let {
-            val (n, min, max) = it
-            var taskEndingStatus = 0
+        intent.getIntArrayExtra("DATA")?.let { (n, min, max) ->
             try {
                 val matrix = generateMatrix(n, min, max)
                 showMatrix(matrix)
-                val strMatrix = serializeMatrix(matrix)
-                writeToClipboard(strMatrix)
+                writeToClipboard(serializeMatrix(matrix))
+                sendTaskEndingSignal(0)
             } catch (e: Exception) {
-                taskEndingStatus = 1
+                sendTaskEndingSignal(1)
             }
-            sendTaskEndingSignal(taskEndingStatus)
         }
     }
 
-    private fun generateMatrix(n: Int, min: Int, max: Int): Array<IntArray> {
-        return Array(n) {
-            IntArray(n) {
-                (min..max).random()
-            }
-        }
+    private fun generateMatrix(n: Int, min: Int, max: Int): Array<IntArray> = Array(n) {
+        IntArray(n) { (min..max).random() }
     }
 
     private fun showMatrix(matrix: Array<IntArray>) {
-        val str = StringBuilder()
-        val n = matrix.size
-        (0 until n).forEach { i ->
-            (0 until n - 1).forEach { j ->
-                val value = matrix[i][j]
+        matrixTextView.text = matrix.joinToString("\n\n") { row ->
+            row.joinToString(" ") { value ->
                 val prefix = if (value >= 0) " " else ""
                 val spaces = when (abs(value)) {
                     in 0..9 -> "      "
@@ -63,38 +52,24 @@ class Object2 : AppCompatActivity() {
                     in 100..999 -> "  "
                     else -> " "
                 }
-                str.append("$prefix$value$spaces")
-            }
-            str.append("${matrix[i][n - 1]}\n\n")
+                "$prefix$value$spaces"
+            }.trimEnd()
         }
-        matrixTextView.text = str.dropLast(2).toString()
     }
 
-    private fun serializeMatrix(matrix: Array<IntArray>): String {
-        val str = StringBuilder()
-        val n = matrix.size
-        (0 until n).forEach { i ->
-            (0 until n - 1).forEach { j ->
-                str.append("${matrix[i][j]}\t")
-            }
-            str.append("${matrix[i][n - 1]}\n")
-        }
-        return str.dropLast(1).toString()
+    private fun serializeMatrix(matrix: Array<IntArray>) = matrix.joinToString("\n") {
+        it.joinToString("\t")
     }
 
     private fun writeToClipboard(data: String) {
-        val manager = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-        val clipData = ClipData.newPlainText("MATRIX", data)
-        manager.setPrimaryClip(clipData)
+        (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
+            ClipData.newPlainText("MATRIX", data)
+        )
     }
 
     private fun sendTaskEndingSignal(status: Int) {
-        Intent("OBJECT2_SEND_SIGNAL").apply {
-            putExtra("SIGNAL",
-                if (status == 0) "TASK_END_SUCCESS"
-                else "TASK_END_FAILURE"
-            )
-            sendBroadcast(this)
-        }
+        sendBroadcast(Intent("OBJECT2_SEND_SIGNAL").apply {
+            putExtra("SIGNAL", if (status == 0) "TASK_END_SUCCESS" else "TASK_END_FAILURE")
+        })
     }
 }
