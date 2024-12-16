@@ -8,28 +8,24 @@ import android.widget.TextView
 import com.google.android.material.snackbar.Snackbar
 import com.oop.lab4.R
 
-class Tooltip(context: Context, attrs: AttributeSet?): View(context, attrs) {
+class Tooltip(context: Context, attrs: AttributeSet?) : View(context, attrs) {
     private lateinit var tooltip: Snackbar
 
     fun create(parent: View, text: String): Tooltip {
-        val displayDuration = Snackbar.LENGTH_LONG
-        tooltip = Snackbar.make(parent, "", displayDuration)
+        tooltip = Snackbar.make(parent, "", Snackbar.LENGTH_LONG).apply {
+            view.setBackgroundColor(context.getColor(R.color.transparent))
+            (view as Snackbar.SnackbarLayout).apply {
+                val customView = inflate(context, R.layout.tooltip, null)
+                addView(customView)
 
-        val backgroundColor = context.getColor(R.color.transparent)
-        tooltip.view.setBackgroundColor(backgroundColor)
-
-        val layout = tooltip.view as Snackbar.SnackbarLayout
-        val view = inflate(context, R.layout.tooltip, null)
-        layout.addView(view)
-
-        val textView = view.findViewById<TextView>(R.id.tooltip_text)
-        textView.text = text
-
-        val btnHide = view.findViewById<Button>(R.id.tooltip_hide)
-        btnHide.setOnClickListener {
-            val textColor = context.getColor(R.color.tooltip_bnt_clicked_text_color)
-            btnHide.setTextColor(textColor)
-            hide()
+                customView.findViewById<TextView>(R.id.tooltip_text).text = text
+                customView.findViewById<Button>(R.id.tooltip_hide).apply {
+                    setOnClickListener {
+                        setTextColor(context.getColor(R.color.tooltip_bnt_clicked_text_color))
+                        hide()
+                    }
+                }
+            }
         }
         return this
     }

@@ -6,11 +6,10 @@ import android.graphics.PorterDuffColorFilter
 import android.util.AttributeSet
 import android.view.MotionEvent
 import com.oop.lab4.R
-
 import com.oop.lab4.shape.Shape
 import com.oop.lab4.tooltip.Tooltip
 
-class ObjectButton(context: Context, attrs: AttributeSet?):
+class ObjectButton(context: Context, attrs: AttributeSet?) :
     androidx.appcompat.widget.AppCompatImageButton(context, attrs) {
     private lateinit var shape: Shape
 
@@ -23,14 +22,11 @@ class ObjectButton(context: Context, attrs: AttributeSet?):
 
     private val timeOfLongPress = 1000
     private var pressStartTime: Long = 0
-    private var pressEndTime: Long = 0
 
     fun onCreate(shape: Shape) {
         this.shape = shape
-        val selectTooltipText = "Вибрати об\'єкт\n\"${shape.name}\""
-        selectTooltip.create(this, selectTooltipText)
-        val cancelTooltipText = "Вимкнути режим\nредагування"
-        cancelTooltip.create(this, cancelTooltipText)
+        selectTooltip.create(this, "Вибрати об'єкт\n\"${shape.name}\"")
+        cancelTooltip.create(this, "Вимкнути режим\nредагування")
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -40,15 +36,9 @@ class ObjectButton(context: Context, attrs: AttributeSet?):
                 pressStartTime = System.currentTimeMillis()
             }
             MotionEvent.ACTION_UP -> {
-                pressEndTime = System.currentTimeMillis()
-                val pressDuration = pressEndTime - pressStartTime
-                if (pressDuration < timeOfLongPress) {
-                    performClick()
-                } else {
-                    performLongClick()
-                }
+                val pressDuration = System.currentTimeMillis() - pressStartTime
+                if (pressDuration < timeOfLongPress) performClick() else performLongClick()
                 pressStartTime = 0
-                pressEndTime = 0
             }
         }
         return true
@@ -56,48 +46,44 @@ class ObjectButton(context: Context, attrs: AttributeSet?):
 
     override fun performClick(): Boolean {
         super.performClick()
-        if (!isObjSelected) {
-            onObjSelectListener(shape.getInstance())
-        } else {
-            onObjCancelListener()
-        }
+        if (isObjSelected) onObjCancelListener() else onObjSelectListener(shape.getInstance())
         return true
     }
 
     override fun performLongClick(): Boolean {
         super.performLongClick()
-        if (!isObjSelected) {
-            markNotPressed()
-            selectTooltip.show()
-        } else {
+        if (isObjSelected) {
             markSelected()
             cancelTooltip.show()
+        } else {
+            markNotPressed()
+            selectTooltip.show()
         }
         return true
     }
 
     private fun markPressed() {
-        val backgroundColorId = R.color.pressed_btn_background_color
-        backgroundTintList = context.getColorStateList(backgroundColorId)
+        backgroundTintList = context.getColorStateList(R.color.pressed_btn_background_color)
     }
 
     private fun markNotPressed() {
-        val backgroundColorId = R.color.transparent
-        backgroundTintList = context.getColorStateList(backgroundColorId)
+        backgroundTintList = context.getColorStateList(R.color.transparent)
     }
 
     private fun markSelected() {
-        val backgroundColorId = R.color.selected_btn_background_color
-        backgroundTintList = context.getColorStateList(backgroundColorId)
-        val iconColor = context.getColor(R.color.selected_btn_icon_color)
-        colorFilter = PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN)
+        backgroundTintList = context.getColorStateList(R.color.selected_btn_background_color)
+        colorFilter = PorterDuffColorFilter(
+            context.getColor(R.color.selected_btn_icon_color),
+            PorterDuff.Mode.SRC_IN
+        )
     }
 
     private fun markNotSelected() {
-        val backgroundColorId = R.color.transparent
-        backgroundTintList = context.getColorStateList(backgroundColorId)
-        val iconColor = context.getColor(R.color.on_objects_toolbar_color)
-        colorFilter = PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN)
+        backgroundTintList = context.getColorStateList(R.color.transparent)
+        colorFilter = PorterDuffColorFilter(
+            context.getColor(R.color.on_objects_toolbar_color),
+            PorterDuff.Mode.SRC_IN
+        )
     }
 
     fun setObjListeners(

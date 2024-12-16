@@ -1,31 +1,27 @@
 package com.oop.lab4.my_editor
 
 import android.content.Context
-
 import com.oop.lab4.paint_view.PaintUtils
-import com.oop.lab4.shape.Shape
-import com.oop.lab4.shape.PointShape
-import com.oop.lab4.shape.LineShape
-import com.oop.lab4.shape.RectShape
-import com.oop.lab4.shape.EllipseShape
-import com.oop.lab4.shape.SegmentShape
-import com.oop.lab4.shape.CuboidShape
+import com.oop.lab4.shape.*
 
-class MyEditor(context: Context): PaintMessagesHandler {
-    lateinit var paintUtils: PaintUtils
+class MyEditor(context: Context) : PaintMessagesHandler {
+
     override var isRubberTraceModeOn = false
 
-    val shapes = arrayOf(
+    lateinit var paintUtils: PaintUtils
+    private val drawnShapes = mutableListOf<Shape>()
+
+    private val shapes = arrayOf(
         PointShape(context),
         LineShape(context),
         RectShape(context),
         EllipseShape(context),
         SegmentShape(context),
-        CuboidShape(context),
+        CuboidShape(context)
     )
+
     var currentShape: Shape? = null
         private set
-    private val drawnShapes = mutableListOf<Shape>()
 
     fun start(shape: Shape) {
         currentShape = shape
@@ -53,33 +49,29 @@ class MyEditor(context: Context): PaintMessagesHandler {
     }
 
     override fun onFingerRelease() {
-        currentShape = currentShape?.let {
+        currentShape?.let {
             isRubberTraceModeOn = false
-            if (it.isValid()) {
-                drawnShapes.add(it)
-            }
+            if (it.isValid()) drawnShapes.add(it)
             paintUtils.repaint()
-            it.getInstance()
+            currentShape = it.getInstance()
         }
     }
 
     override fun onPaint() {
         paintUtils.clearCanvas(paintUtils.rubberTraceCanvas)
         paintUtils.clearCanvas(paintUtils.drawnShapesCanvas)
-        drawnShapes.forEach {
-            it.showDefault(paintUtils.drawnShapesCanvas)
-        }
+        drawnShapes.forEach { it.showDefault(paintUtils.drawnShapesCanvas) }
     }
 
     fun undo() {
-        if (drawnShapes.size > 0) {
+        if (drawnShapes.isNotEmpty()) {
             drawnShapes.removeLast()
             paintUtils.repaint()
         }
     }
 
     fun clearAll() {
-        if (drawnShapes.size > 0) {
+        if (drawnShapes.isNotEmpty()) {
             drawnShapes.clear()
             paintUtils.repaint()
         }

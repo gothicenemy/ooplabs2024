@@ -1,57 +1,35 @@
 package com.oop.lab4.shape
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.PointF
-import android.graphics.RectF
+import android.graphics.*
 import com.oop.lab4.R
 
-class CuboidShape(private val context: Context):
-    Shape(context),
-    LineShapeInterface,
-    RectShapeInterface {
+class CuboidShape(private val context: Context) : Shape(context), LineShapeInterface, RectShapeInterface {
     override val name = context.getString(R.string.cuboid)
 
-    override fun isValid(): Boolean {
-        return (startX != endX || startY != endY)
-    }
+    override fun isValid() = startX != endX || startY != endY
 
-    override fun getInstance(): Shape {
-        return CuboidShape(context).also {
-            it.associatedIds.putAll(this.associatedIds)
-        }
+    override fun getInstance() = CuboidShape(context).also {
+        it.associatedIds.putAll(associatedIds)
     }
 
     override fun show(canvas: Canvas, outlinePaint: Paint, fillingPaint: Paint?) {
-        val frontRect = RectF(startX, startY, endX, endY)
-        rectShapeShow(context, canvas, outlinePaint, null, frontRect)
         val offset = 100F
-        val backRect = RectF(frontRect).apply {
-            offset(offset, -offset)
-        }
+        val frontRect = RectF(startX, startY, endX, endY).apply { sort() }
+        val backRect = RectF(frontRect).apply { offset(offset, -offset); sort() }
+
+        rectShapeShow(context, canvas, outlinePaint, null, frontRect)
         rectShapeShow(context, canvas, outlinePaint, null, backRect)
-        frontRect.sort()
-        backRect.sort()
-        lineShapeShow(context, canvas, outlinePaint,
-            PointF(frontRect.right, frontRect.top),
-            PointF(backRect.right, backRect.top)
-        )
-        lineShapeShow(context, canvas, outlinePaint,
-            PointF(frontRect.right, frontRect.bottom),
-            PointF(backRect.right, backRect.bottom)
-        )
-        lineShapeShow(context, canvas, outlinePaint,
-            PointF(frontRect.left, frontRect.bottom),
-            PointF(backRect.left, backRect.bottom)
-        )
-        lineShapeShow(context, canvas, outlinePaint,
-            PointF(frontRect.left, frontRect.top),
-            PointF(backRect.left, backRect.top)
-        )
+
+        listOf(
+            frontRect.right to backRect.right,
+            frontRect.bottom to backRect.bottom,
+            frontRect.left to backRect.left,
+            frontRect.top to backRect.top
+        ).zipWithNext().forEach { (start, end) ->
+            lineShapeShow(context, canvas, outlinePaint, PointF(start, start), PointF(end, end))
+        }
     }
 
-    override fun showDefault(canvas: Canvas) {
-        show(canvas, getOutlinePaint(), null)
-    }
+    override fun showDefault(canvas: Canvas) = show(canvas, getOutlinePaint(), null)
 }

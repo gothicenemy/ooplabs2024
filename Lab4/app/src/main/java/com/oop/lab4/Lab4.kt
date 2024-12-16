@@ -2,7 +2,6 @@ package com.oop.lab4
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-
 import com.oop.lab4.shape.Shape
 import com.oop.lab4.my_editor.MyEditor
 import com.oop.lab4.paint_view.PaintView
@@ -19,15 +18,22 @@ class Lab4 : AppCompatActivity() {
         setContentView(R.layout.main_activity)
 
         editor = MyEditor(this)
+        setupToolbars()
+        setupPaintView()
+    }
 
+    private fun setupToolbars() {
         mainToolbar = findViewById(R.id.main_toolbar)
-        mainToolbar.onCreate(editor)
-        mainToolbar.setObjListeners(::onObjSelect, ::onObjCancel)
-
         objectsToolbar = findViewById(R.id.objects_toolbar)
-        objectsToolbar.onCreate(editor)
-        objectsToolbar.setObjListeners(::onObjSelect, ::onObjCancel)
 
+        mainToolbar.onCreate(editor)
+        objectsToolbar.onCreate(editor)
+
+        mainToolbar.setObjListeners(::onObjSelect, ::onObjCancel)
+        objectsToolbar.setObjListeners(::onObjSelect, ::onObjCancel)
+    }
+
+    private fun setupPaintView() {
         val paintView = findViewById<PaintView>(R.id.paint_view)
         paintView.handler = editor
         editor.paintUtils = paintView

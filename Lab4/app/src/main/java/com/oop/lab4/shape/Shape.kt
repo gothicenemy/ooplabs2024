@@ -10,10 +10,10 @@ abstract class Shape(private val context: Context) {
     abstract val name: String
     val associatedIds = mutableMapOf<String, Int>()
 
-    protected var startX: Float = 0F
-    protected var startY: Float = 0F
-    protected var endX: Float = 0F
-    protected var endY: Float = 0F
+    protected var startX = 0F
+    protected var startY = 0F
+    protected var endX = 0F
+    protected var endY = 0F
 
     fun setStart(x: Float, y: Float) {
         startX = x
@@ -26,40 +26,28 @@ abstract class Shape(private val context: Context) {
     }
 
     abstract fun isValid(): Boolean
-
     abstract fun getInstance(): Shape
-
-    protected open fun getOutlinePaint(): Paint {
-        return Paint().apply {
-            isAntiAlias = true
-            style = Paint.Style.STROKE
-            strokeWidth = 7F
-            color = context.getColor(R.color.black)
-        }
-    }
-
-    protected open fun getFillingPaint(): Paint {
-        return Paint().apply {
-            isAntiAlias = true
-            style = Paint.Style.FILL
-        }
-    }
-
-    protected open fun getRubberTracePaint(): Paint {
-        val paint = getOutlinePaint()
-        paint.color = context.getColor(R.color.dark_blue)
-        val dashLen = 30F
-        val spaceLen = 15F
-        val dashDensity = floatArrayOf(dashLen, spaceLen, dashLen, spaceLen)
-        paint.pathEffect = DashPathEffect(dashDensity, 0F)
-        return paint
-    }
-
     abstract fun show(canvas: Canvas, outlinePaint: Paint, fillingPaint: Paint?)
-
     abstract fun showDefault(canvas: Canvas)
 
     fun showRubberTrace(canvas: Canvas) {
         show(canvas, getRubberTracePaint(), null)
+    }
+
+    protected open fun getOutlinePaint() = Paint().apply {
+        isAntiAlias = true
+        style = Paint.Style.STROKE
+        strokeWidth = 7F
+        color = context.getColor(R.color.black)
+    }
+
+    protected open fun getFillingPaint() = Paint().apply {
+        isAntiAlias = true
+        style = Paint.Style.FILL
+    }
+
+    protected open fun getRubberTracePaint(): Paint = getOutlinePaint().apply {
+        color = context.getColor(R.color.dark_blue)
+        pathEffect = DashPathEffect(floatArrayOf(30F, 15F), 0F)
     }
 }

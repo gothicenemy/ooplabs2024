@@ -4,12 +4,10 @@ import android.content.Context
 import android.util.AttributeSet
 import androidx.appcompat.widget.Toolbar
 import com.oop.lab4.R
-
 import com.oop.lab4.my_editor.MyEditor
 import com.oop.lab4.shape.Shape
 
-class ObjectsToolbar(context: Context, attrs: AttributeSet?):
-    Toolbar(context, attrs) {
+class ObjectsToolbar(context: Context, attrs: AttributeSet?) : Toolbar(context, attrs) {
     private lateinit var editor: MyEditor
     private lateinit var objButtons: Array<ObjectButton>
 
@@ -18,19 +16,11 @@ class ObjectsToolbar(context: Context, attrs: AttributeSet?):
 
     fun onCreate(editor: MyEditor) {
         this.editor = editor
-        objButtons = arrayOf(
-            findViewById(R.id.btn_point),
-            findViewById(R.id.btn_line),
-            findViewById(R.id.btn_rectangle),
-            findViewById(R.id.btn_ellipse),
-            findViewById(R.id.btn_segment),
-            findViewById(R.id.btn_cuboid),
-        )
-        for (index in objButtons.indices) {
-            val shape = editor.shapes[index]
-            val button = objButtons[index]
-            shape.associatedIds["objButton"] = button.id
-        }
+        objButtons = editor.shapes.mapIndexed { index, shape ->
+            findViewById<ObjectButton>(R.id.btn_point + index).also {
+                shape.associatedIds["objButton"] = it.id
+            }
+        }.toTypedArray()
     }
 
     fun setObjListeners(
@@ -40,30 +30,27 @@ class ObjectsToolbar(context: Context, attrs: AttributeSet?):
         onObjSelectListener = onSelectListener
         onObjCancelListener = onCancelListener
 
-        for (index in objButtons.indices) {
-            val button = objButtons[index]
+        objButtons.forEachIndexed { index, button ->
             val shape = editor.shapes[index]
-            button.onCreate(shape)
-            button.setObjListeners(onObjSelectListener, onObjCancelListener)
+            button.apply {
+                onCreate(shape)
+                setObjListeners(onSelectListener, onCancelListener)
+            }
         }
     }
 
     fun onObjSelect(shape: Shape) {
-        editor.currentShape?.let {
-            val id = it.associatedIds["objButton"]
-            val button = findViewById<ObjectButton>(id!!)
-            button.onObjCancel()
+        editor.currentShape?.associatedIds?.get("objButton")?.let {
+            findViewById<ObjectButton>(it).onObjCancel()
         }
-        val id = shape.associatedIds["objButton"]
-        val button = findViewById<ObjectButton>(id!!)
-        button.onObjSelect()
+        shape.associatedIds["objButton"]?.let {
+            findViewById<ObjectButton>(it).onObjSelect()
+        }
     }
 
     fun onObjCancel() {
-        editor.currentShape?.let {
-            val id = it.associatedIds["objButton"]
-            val button = findViewById<ObjectButton>(id!!)
-            button.onObjCancel()
+        editor.currentShape?.associatedIds?.get("objButton")?.let {
+            findViewById<ObjectButton>(it).onObjCancel()
         }
     }
 }

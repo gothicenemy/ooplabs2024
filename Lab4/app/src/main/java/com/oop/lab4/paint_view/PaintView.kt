@@ -8,13 +8,11 @@ import android.graphics.PorterDuff
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import com.oop.lab4.shape_editor.PaintMessagesHandler
 
-import com.oop.lab4.my_editor.PaintMessagesHandler
-
-class PaintView(context: Context, attrs: AttributeSet?):
+class PaintView(context: Context, attrs: AttributeSet?) :
     View(context, attrs),
     PaintUtils {
-    lateinit var handler: PaintMessagesHandler
 
     override lateinit var drawnShapesCanvas: Canvas
     override lateinit var rubberTraceCanvas: Canvas
@@ -22,32 +20,36 @@ class PaintView(context: Context, attrs: AttributeSet?):
     private lateinit var drawnShapesBitmap: Bitmap
     private lateinit var rubberTraceBitmap: Bitmap
 
+    lateinit var handler: PaintMessagesHandler
+
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
+        initBitmaps(w, h)
+    }
+
+    private fun initBitmaps(w: Int, h: Int) {
         drawnShapesBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         drawnShapesCanvas = Canvas(drawnShapesBitmap)
+
         rubberTraceBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         rubberTraceCanvas = Canvas(rubberTraceBitmap)
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        if (!handler.isRubberTraceModeOn) {
-            handler.onPaint()
-            canvas.drawBitmap(drawnShapesBitmap, 0F, 0F, null)
-        } else {
-            canvas.drawBitmap(drawnShapesBitmap, 0F, 0F, null)
+        canvas.drawBitmap(drawnShapesBitmap, 0F, 0F, null)
+        if (handler.isRubberTraceModeOn) {
             canvas.drawBitmap(rubberTraceBitmap, 0F, 0F, null)
+        } else {
+            handler.onPaint()
         }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         super.onTouchEvent(event)
-        val x = event.x
-        val y = event.y
         when (event.action) {
-            MotionEvent.ACTION_DOWN -> handler.onFingerTouch(x, y)
-            MotionEvent.ACTION_MOVE -> handler.onFingerMove(x, y)
+            MotionEvent.ACTION_DOWN -> handler.onFingerTouch(event.x, event.y)
+            MotionEvent.ACTION_MOVE -> handler.onFingerMove(event.x, event.y)
             MotionEvent.ACTION_UP -> handler.onFingerRelease()
         }
         return true

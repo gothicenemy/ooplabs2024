@@ -1,4 +1,4 @@
-package com.oop.lab4.my_editor
+package com.oop.lab4.shape_editor
 
 interface PaintMessagesHandler {
     var isRubberTraceModeOn: Boolean
